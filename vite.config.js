@@ -1,0 +1,1 @@
+[{'@sveltejs/kit/vite': 'import { sveltekit'}, {'config': 'export default config;'}]

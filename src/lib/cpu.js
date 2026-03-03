@@ -1,0 +1,1 @@
+[{'util': 'const execPromise = promisify(exec);\n\nexport async function getCpuUsage() {\n  try {\n    const { stdout'}, {" | sed 's/%us,//": 'const cpuUsage = parseFloat(stdout.trim());\n    return isNaN(cpuUsage) ? 0 : cpuUsage;'}, {'CPU': ', error);\n    return 0;\n  }\n}'}]

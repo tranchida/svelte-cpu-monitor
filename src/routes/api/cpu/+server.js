@@ -1,0 +1,1 @@
+[{'$lib/cpu': 'import { json'}, {'cpu': 'usage'}, {'CPU': ', error);\n    return json({ cpu: 0 });\n  }\n}'}]
