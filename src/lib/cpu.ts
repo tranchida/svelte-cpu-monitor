@@ -1,4 +1,4 @@
-import os from 'os';
+import os from 'node:os';
 
 /**
  * Retourne les informations brutes des CPUs via os.cpus()
