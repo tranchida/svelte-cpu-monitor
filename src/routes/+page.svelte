@@ -10,7 +10,7 @@
     Legend, 
     CategoryScale 
   } from 'chart.js';
-  import type os from 'os';
+  import type os from 'node:os';
 
   Chart.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Title, Tooltip, Legend);
 
