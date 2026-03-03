@@ -1,5 +1,4 @@
-<script>
-  import { onMount } from 'svelte';
+<script lang="ts">
   import { 
     Chart, 
     LineController, 
@@ -11,19 +10,20 @@
     Legend, 
     CategoryScale 
   } from 'chart.js';
+  import type os from 'os';
 
   Chart.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Title, Tooltip, Legend);
 
-  let canvasEl;
-  let chart;
-  let prevCpus = [];
-  let currentUsage = [];
+  let canvasEl = $state<HTMLCanvasElement>();
+  let chart = $state<Chart>();
+  let prevCpus = $state<os.CpuInfo[]>([]);
+  let currentUsage = $state<number[]>([]);
 
   const colors = [
     '#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899', '#64748B'
   ];
 
-  function calculateUsage(oldCpu, newCpu) {
+  function calculateUsage(oldCpu: os.CpuInfo, newCpu: os.CpuInfo): number {
     const oldTotal = Object.values(oldCpu.times).reduce((a, b) => a + b, 0);
     const newTotal = Object.values(newCpu.times).reduce((a, b) => a + b, 0);
     const totalDiff = newTotal - oldTotal;
@@ -34,15 +34,15 @@
     return Math.max(0, Math.min(100, 100 * (1 - idleDiff / totalDiff)));
   }
 
-  async function updateData() {
+  async function updateData(): Promise<void> {
     try {
       const res = await fetch('/api/cpu');
-      const data = await res.json();
+      const data: { cpus?: os.CpuInfo[] } = await res.json();
       
       if (!data.cpus) return;
 
       const now = new Date().toLocaleTimeString();
-      const newUsage = [];
+      const newUsage: number[] = [];
 
       if (prevCpus.length > 0) {
         data.cpus.forEach((cpu, i) => {
@@ -50,7 +50,7 @@
           newUsage.push(usage);
           
           // Update chart dataset
-          if (chart.data.datasets[i]) {
+          if (chart && chart.data.datasets[i]) {
             chart.data.datasets[i].data.push(usage);
              if (chart.data.datasets[i].data.length > 20) {
               chart.data.datasets[i].data.shift();
@@ -60,26 +60,30 @@
         
         currentUsage = newUsage;
 
-        chart.data.labels.push(now);
-        if (chart.data.labels.length > 20) {
-          chart.data.labels.shift();
+        if (chart && chart.data.labels) {
+          chart.data.labels.push(now);
+          if (chart.data.labels.length > 20) {
+            chart.data.labels.shift();
+          }
+          
+          chart.update('none');
         }
-        
-        chart.update('none');
       } else {
         // Initialize datasets on first load if needed
-        if (chart.data.datasets.length === 0) {
+        if (chart && chart.data.datasets.length === 0) {
            data.cpus.forEach((_, i) => {
-             chart.data.datasets.push({
-               label: `Core ${i}`,
-               data: [],
-               borderColor: colors[i % colors.length],
-               backgroundColor: 'transparent',
-               tension: 0.4,
-               pointRadius: 0
-             });
+             if (chart) {
+               chart.data.datasets.push({
+                 label: `Core ${i}`,
+                 data: [],
+                 borderColor: colors[i % colors.length],
+                 backgroundColor: 'transparent',
+                 tension: 0.4,
+                 pointRadius: 0
+               });
+             }
            });
-           chart.update();
+           if (chart) chart.update();
         }
       }
 
@@ -89,7 +93,9 @@
     }
   }
 
-  onMount(() => {
+  $effect(() => {
+    if (!canvasEl) return;
+    
     chart = new Chart(canvasEl, {
       type: 'line',
       data: {
@@ -122,7 +128,10 @@
     const interval = setInterval(updateData, 2000);
     updateData();
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      chart?.destroy();
+    };
   });
 </script>
 
