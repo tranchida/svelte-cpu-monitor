@@ -1,1 +1,6 @@
-[{'@sveltejs/kit/vite': 'import { sveltekit'}, {'config': 'export default config;'}]
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+plugins: [sveltekit()]
+});
