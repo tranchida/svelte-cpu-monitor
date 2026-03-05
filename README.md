@@ -15,22 +15,30 @@ Un outil de monitoring CPU en temps réel construit avec SvelteKit 2 et Svelte 5
 ```
 src/
 ├── lib/
-│   └── cpu.js          # Fonctions pour récupérer les stats CPU
+│   ├── cpu.ts          # Fonctions pour récupérer/calculer les stats CPU
+│   └── chartAction.ts  # Action Svelte pour le graphique Chart.js
 ├── routes/
 │   ├── +page.svelte     # Page principale avec le graphique (Svelte 5)
 │   ├── +layout.svelte   # Layout de base
 │   └── api/
-│       └── cpu/+server.js # Endpoint API pour obtenir les données CPU
+│       └── cpu/+server.ts # Endpoint SSE pour obtenir les données CPU en direct
 ```
 
 ## ✨ Fonctionnalités
 
 - Récupération des données CPU via Node.js `os.cpus()`
-- API interne pour exposer ces données en JSON
+- API interne SSE pour pousser les données CPU en continu
 - Affichage en temps réel avec Chart.js
 - Interface moderne avec Tailwind CSS
-- Mise à jour automatique toutes les 2 secondes
+- Flux mis à jour toutes les 2 secondes côté serveur
 - Affichage par cœur de processeur
+
+## 🧠 Architecture SSE
+
+- **Un seul sampler CPU global côté serveur** : l'échantillonnage CPU est mutualisé (intervalle unique) pour tous les clients connectés.
+- **Broadcast multi-clients** : chaque échantillon est diffusé à toutes les connexions SSE actives.
+- **Heartbeat SSE** : un keepalive (`: heartbeat`) est envoyé périodiquement pour limiter les coupures silencieuses derrière certains proxies.
+- **Nettoyage automatique** : les timers sont arrêtés quand le dernier client se déconnecte.
 
 ## 🛠️ Installation et développement
 

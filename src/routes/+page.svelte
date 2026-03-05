@@ -1,5 +1,6 @@
 <script lang="ts">
   import { chartAction } from "$lib/chartAction";
+  import { chartColors } from "$lib/chartColors";
 
   let currentUsages = $state<number[]>([]);
   let totalUsage = $state<number>(0);
@@ -9,30 +10,13 @@
   let numCores = $state<number>(0);
 
   let eventSource: EventSource | null = null;
-  const colors = [
-    "#EF4444",
-    "#F59E0B",
-    "#10B981",
-    "#3B82F6",
-    "#6366F1",
-    "#8B5CF6",
-    "#EC4899",
-    "#64748B",
-    "#F97316",
-    "#14B8A6",
-    "#06B6D4",
-    "#A855F7",
-    "#84CC16",
-    "#E11D48",
-    "#0EA5E9",
-    "#D97706",
-    "#22C55E",
-    "#7C3AED",
-    "#FB923C",
-    "#2DD4BF",
-  ];
+  let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
   function connectSSE() {
+    if (reconnectTimer) {
+      clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+    }
     if (eventSource) eventSource.close();
     eventSource = new EventSource("/api/cpu");
     isConnected = "connecting";
@@ -60,7 +44,7 @@
       isConnected = "disconnected";
       eventSource?.close();
       // Retry logic
-      setTimeout(connectSSE, 3000);
+      reconnectTimer = setTimeout(connectSSE, 3000);
     };
   }
 
@@ -68,6 +52,10 @@
     connectSSE();
     return () => {
       eventSource?.close();
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+        reconnectTimer = null;
+      }
     };
   });
 </script>
@@ -184,7 +172,7 @@
             >
             <div
               class="text-2xl font-bold"
-              style="color: {colors[i % colors.length]}"
+              style="color: {chartColors[i % chartColors.length]}"
             >
               {usage.toFixed(1)}%
             </div>
@@ -193,8 +181,8 @@
             >
               <div
                 class="h-full rounded-full transition-all duration-300 ease-out"
-                style="width: {usage}%; background-color: {colors[
-                  i % colors.length
+                style="width: {usage}%; background-color: {chartColors[
+                  i % chartColors.length
                 ]}"
               ></div>
             </div>
